@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Paginizer.Contracts.Extensions;
 using Paginizer.Contracts.Models;
-using Paginizer.Core.Attributes;
+using QuerySuite.Core.Attributes;
 using QuerySuite.Usage.Sample.Data;
 
 namespace QuerySuite.Usage.Sample.Controllers;

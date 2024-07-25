@@ -1,4 +1,4 @@
-using Paginizer.Core.Contracts;
+using QuerySuite.Core.Contracts;
 
 namespace Paginizer.Contracts.Models;
 

@@ -1,6 +1,6 @@
-using Paginizer.Core.Enums;
+using QuerySuite.Core.Enums;
 
-namespace Paginizer.Core.Contracts;
+namespace QuerySuite.Core.Contracts;
 public class FilterCriteria
 {
     public required string Column { get; set; }

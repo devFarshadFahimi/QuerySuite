@@ -1,37 +1,37 @@
-### README.md for Paginizer
+### README.md for QuerySuite
 
 ---
 
-# Paginizer
+# QuerySuite
 
-**Paginizer** is a robust and flexible .NET library designed to provide easy-to-use pagination, filtering, and sorting functionalities for Entity Framework Core queries. It abstracts EF Core specifics, making it compatible with different versions of EF Core and allowing you to manage complex data retrieval scenarios effortlessly.
+**QuerySuite** is a .NET library designed to simplify and enhance querying capabilities by providing robust pagination, filtering, and sorting functionalities for `IQueryable` collections. This library aims to improve the efficiency and readability of your data access layer in ASP.NET Core applications.
 
 ## Features
 
-- **Pagination**: Easily paginate your IQueryable queries.
-- **Filtering**: Apply dynamic filters based on various conditions.
-- **Sorting**: Sort your data by multiple columns.
-- **Compatibility**: Compatible with different versions of EF Core.
+- **Pagination:** Easy-to-use methods for paginating query results.
+- **Filtering:** Dynamic filters with various conditions.
+- **Sorting:** Flexible sorting on multiple columns.
+- **Nested Property Handling:** Map DTO properties to nested entity properties.
 
 ## Installation
 
-You can install Paginizer via NuGet Package Manager:
+Install QuerySuite via NuGet Package Manager:
 
 ```sh
-dotnet add package Paginizer
+dotnet add package QuerySuite
 ```
 
 Or via the NuGet Package Manager Console in Visual Studio:
 
 ```sh
-Install-Package Paginizer
+Install-Package QuerySuite
 ```
 
 ## Getting Started
 
 ### Step 1: Define Pagination Parameters
 
-Define the pagination parameters, filter parameters, and sorting parameters.
+Define the pagination, filter, and sorting parameters.
 
 ```csharp
 public class PaginationParams
@@ -53,7 +53,7 @@ public class FilterParams
 
 ### Step 2: Define Paginated Result
 
-Define a class to hold the paginated results.
+Create a class to hold the paginated results.
 
 ```csharp
 public class PaginatedResult<T>
@@ -70,11 +70,11 @@ public class PaginatedResult<T>
 Use the provided extension methods to apply pagination, filtering, and sorting.
 
 ```csharp
-using Paginizer;
+using QuerySuite;
 
 public static class IQueryableExtensions
 {
-    public static async Task<PaginatedResult<T>> ToPaginatedResultAsync<T>(this IQueryable<T> query, PaginationParams paginationParams, IAsyncQueryProvider asyncQueryProvider)
+    public static async Task<PaginatedResult<TModel>> ToPaginatedResultAsync<TEntity, TModel>(this IQueryable<TEntity> query, PaginationParams paginationParams)
     {
         // Apply filters
         foreach (var filter in paginationParams.Filters)
@@ -89,15 +89,16 @@ public static class IQueryableExtensions
         }
 
         // Get total count
-        int totalCount = await asyncQueryProvider.CountAsync(query);
+        int totalCount = await query.CountAsync();
 
         // Apply pagination
-        var items = await asyncQueryProvider.ToListAsync(
-            query.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
-                 .Take(paginationParams.PageSize)
-        );
+        var items = await query
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .Select(GetSelectExpression<TEntity, TModel>())
+            .ToListAsync();
 
-        return new PaginatedResult<T>
+        return new PaginatedResult<TModel>
         {
             Items = items,
             TotalCount = totalCount,
@@ -106,23 +107,43 @@ public static class IQueryableExtensions
         };
     }
 
-    private static IQueryable<T> ApplyFilter<T>(IQueryable<T> query, FilterParams filter)
+    private static IQueryable<TEntity> ApplyFilter<TEntity>(IQueryable<TEntity> query, FilterParams filter)
     {
         // Logic for applying filters
         return query;
     }
 
-    private static IQueryable<T> ApplySorting<T>(IQueryable<T> query, string sortColumn, bool sortDescending)
+    private static IQueryable<TEntity> ApplySorting<TEntity>(IQueryable<TEntity> query, string sortColumn, bool sortDescending)
     {
         // Logic for applying sorting
         return query;
+    }
+
+    private static Expression<Func<TEntity, TModel>> GetSelectExpression<TEntity, TModel>()
+    {
+        var entityParam = Expression.Parameter(typeof(TEntity), "e");
+        var bindings = typeof(TModel).GetProperties()
+            .Select(modelProp => Expression.Bind(modelProp, GetNestedPropertyExpression(entityParam, modelProp)))
+            .ToList();
+        return Expression.Lambda<Func<TEntity, TModel>>(Expression.MemberInit(Expression.New(typeof(TModel)), bindings), entityParam);
+    }
+
+    private static Expression GetNestedPropertyExpression(Expression parameter, PropertyInfo property)
+    {
+        var parts = property.GetCustomAttribute<MapToEntityAttribute>()?.EntityPropertyName.Split('.') ?? new[] { property.Name };
+        Expression propertyAccess = parameter;
+        foreach (var part in parts)
+        {
+            propertyAccess = Expression.Property(propertyAccess, part);
+        }
+        return propertyAccess;
     }
 }
 ```
 
 ### Step 4: Setup Dependency Injection
 
-In your application, set up dependency injection to use the `IAsyncQueryProvider` for EF Core.
+Configure dependency injection in your application.
 
 ```csharp
 public class Startup
@@ -131,8 +152,6 @@ public class Startup
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-
-        services.AddScoped<IAsyncQueryProvider, EfCoreAsyncQueryProvider>();
 
         // Other service registrations
     }
@@ -143,7 +162,7 @@ public class Startup
 
 ### Step 5: Use in Controller
 
-Use the extension method in your controller to paginate, filter, and sort your data.
+Use the extension method in your controller to handle data operations.
 
 ```csharp
 [ApiController]
@@ -151,21 +170,17 @@ Use the extension method in your controller to paginate, filter, and sort your d
 public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly IAsyncQueryProvider _asyncQueryProvider;
 
-    public UsersController(ApplicationDbContext context, IAsyncQueryProvider asyncQueryProvider)
+    public UsersController(ApplicationDbContext context)
     {
         _context = context;
-        _asyncQueryProvider = asyncQueryProvider;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetUsers([FromQuery] PaginationParams paginationParams)
     {
         var query = _context.Users.Include(u => u.Role).AsQueryable();
-
-        // Apply pagination
-        var result = await query.ToPaginatedResultAsync(paginationParams, _asyncQueryProvider);
+        var result = await query.ToPaginatedResultAsync<User, UserDto>(paginationParams);
         return Ok(result);
     }
 }
@@ -173,19 +188,19 @@ public class UsersController : ControllerBase
 
 ## Example Project
 
-An example project is included in the repository to demonstrate how to use Paginizer. The example project includes a basic setup with an ASP.NET Core Web API and Entity Framework Core.
+An example project is included in the repository to demonstrate how to use QuerySuite. The example includes a basic setup with an ASP.NET Core Web API and Entity Framework Core.
 
 ### Example Project Structure
 
 ```
-Paginizer
+QuerySuite
 │
 ├── src
-│   ├── Paginizer
+│   ├── QuerySuite
 │   │   ├── IQueryableExtensions.cs
 │   │   ├── IAsyncQueryProvider.cs
 │   │   └── EfCoreAsyncQueryProvider.cs
-│   └── Paginizer.Sample
+│   └── QuerySuite.Sample
 │       ├── Controllers
 │       │   └── UsersController.cs
 │       ├── Data
@@ -195,23 +210,23 @@ Paginizer
 │       │       └── Role.cs
 │       ├── Program.cs
 │       ├── Startup.cs
-│       └── Paginizer.Sample.csproj
+│       └── QuerySuite.Sample.csproj
 ├── tests
-│   └── Paginizer.Tests
-│       ├── PaginizerTests.cs
-│       └── Paginizer.Tests.csproj
-├── Paginizer.sln
+│   └── QuerySuite.Tests
+│       ├── QuerySuiteTests.cs
+│       └── QuerySuite.Tests.csproj
+├── QuerySuite.sln
 └── README.md
 ```
 
 ## Contributing
 
-We welcome contributions to Paginizer! If you have any ideas, suggestions, or issues, please open an issue or submit a pull request.
+We welcome contributions! If you have any ideas, suggestions, or issues, please open an issue or submit a pull request.
 
 ## License
 
-Paginizer is licensed under the MIT License. See the LICENSE file for more details.
+QuerySuite is licensed under the MIT License. See the LICENSE file for more details.
 
 ---
 
-With this README file, users will have a clear understanding of how to install, configure, and use the Paginizer library in their .NET applications. The example project provides a concrete demonstration, making it easier for users to get started quickly.
+This README provides a comprehensive guide for users to understand and implement QuerySuite in their projects. Feel free to adjust the details to better match your project's specifics.

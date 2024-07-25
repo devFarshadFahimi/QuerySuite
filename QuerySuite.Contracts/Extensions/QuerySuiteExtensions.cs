@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Paginizer.Contracts.Models;
-using Paginizer.Core;
+using QuerySuite.Core;
 
 namespace Paginizer.Contracts.Extensions;
 

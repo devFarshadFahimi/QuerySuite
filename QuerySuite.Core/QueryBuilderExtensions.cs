@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
-using Paginizer.Core.Attributes;
-using Paginizer.Core.Contracts;
-using Paginizer.Core.Enums;
+using QuerySuite.Core.Attributes;
+using QuerySuite.Core.Contracts;
+using QuerySuite.Core.Enums;
 
-namespace Paginizer.Core;
+namespace QuerySuite.Core;
 
 public static class QueryBuilderExtensions
 {

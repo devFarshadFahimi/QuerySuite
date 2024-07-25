@@ -1,4 +1,4 @@
-namespace Paginizer.Core.Enums;
+namespace QuerySuite.Core.Enums;
 
 public enum FilterCondition
 {
