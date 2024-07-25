@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Paginizer.Contracts.Models;
+using QuerySuite.Contracts.Models;
 using QuerySuite.Core;
 
-namespace Paginizer.Contracts.Extensions;
+namespace QuerySuite.Contracts.Extensions;
 
 public static class QuerySuiteExtensions
 {

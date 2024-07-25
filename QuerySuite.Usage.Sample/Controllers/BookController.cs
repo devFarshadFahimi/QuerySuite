@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Paginizer.Contracts.Extensions;
-using Paginizer.Contracts.Models;
+using QuerySuite.Contracts.Extensions;
+using QuerySuite.Contracts.Models;
 using QuerySuite.Core.Attributes;
 using QuerySuite.Usage.Sample.Data;
 

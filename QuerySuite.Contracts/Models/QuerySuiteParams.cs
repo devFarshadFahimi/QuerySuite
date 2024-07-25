@@ -1,6 +1,6 @@
 using QuerySuite.Core.Contracts;
 
-namespace Paginizer.Contracts.Models;
+namespace QuerySuite.Contracts.Models;
 
 public class QuerySuiteParams
 {
