@@ -4,7 +4,27 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>QuerySuite.Contracts</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Farshad Fahimi</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Product>QuerySuite</Product>
+    <Description>A library for pagination, filtering, and sorting in IQueryable for .NET applications.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/devFarshadFahimi/QuerySuite</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/devFarshadFahimi/QuerySuite</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Pagination;Filtering;Sorting;EntityFramework;IQueryable;.NET</PackageTags>
+    <PackageReleaseNotes>Initial release of QuerySuite</PackageReleaseNotes>
   </PropertyGroup>
+  <ItemGroup>
+    <None Update="icon.png">
+      <Pack>True</Pack>
+      <PackagePath>icon.png</PackagePath>
+    </None>
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.*" />
   </ItemGroup>

@@ -27,9 +27,12 @@ public class PaginatedBooksDto
     public int Id { get; set; }
     public string Title { get; set; } = null!;
 
-    [MapToEntity("Author.Id")] public int AuthorId { get; init; }
+    [MapToEntity("Author.Id")]
+    public int AuthorId { get; init; }
 
-    [MapToEntity("Author.FirstName")] public string AuthorFirstName { get; set; } = null!;
+    [MapToEntity("Author.FirstName")]
+    public string AuthorFirstName { get; set; } = null!;
 
-    [MapToEntity("Author.LastName")] public string AuthorLastName { get; set; } = null!;
+    [MapToEntity("Author.LastName")]
+    public string AuthorLastName { get; set; } = null!;
 }

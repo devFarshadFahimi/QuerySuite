@@ -20,7 +20,7 @@ public static class QuerySuiteExtensions
         // Apply sorting
         if (!string.IsNullOrEmpty(querySuiteParams.SortColumn))
         {
-            query = query.ApplySort(querySuiteParams.SortColumn, querySuiteParams.SortDescending);
+            query = query.ApplySort<TEntity, TModel>(querySuiteParams.SortColumn, querySuiteParams.SortDescending);
         }
 
         // Get total records count before pagination
