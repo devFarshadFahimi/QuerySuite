@@ -35,6 +35,34 @@ public class ApplicationDbContext : DbContext
                 }
             ]);
         });
+        
+        modelBuilder.Entity<AuthorContact>(p =>
+        {
+            p.HasKey(q => q.Id);
+            p.Property(q => q.PhoneNumber).HasMaxLength(50);
+            p.Property(q => q.Address).HasMaxLength(50);
+            p.HasData([
+                new AuthorContact()
+                {
+                    Id = 1,
+                    PhoneNumber = "09104544127",
+                    Address = "Tehran, Iran",
+                    AuthorId = 1
+                },new AuthorContact()
+                {
+                    Id = 2,
+                    PhoneNumber = "09010101014",
+                    Address = "Babol, Iran",
+                    AuthorId = 2
+                },new AuthorContact()
+                {
+                    Id = 3,
+                    PhoneNumber = "09871236985",
+                    Address = "Bandar, Iran",
+                    AuthorId = 3
+                },
+            ]);
+        });
 
         modelBuilder.Entity<Book>(p =>
         {
@@ -71,6 +99,7 @@ public class Book
 {
     public int Id { get; set; }
     public string Title { get; set; } = null!;
+    public bool IsPublished { get; set; }
     public int AuthorId { get; set; }
     public Author Author { get; set; } = null!;
 }
@@ -80,5 +109,17 @@ public class Author
     public int Id { get; set; }
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
+    
+    public AuthorContact AuthorContact { get; set; } = null!;
     public ICollection<Book> Books { get; set; } = [];
+}
+
+public class AuthorContact
+{
+    public int Id { get; set; }
+    public string PhoneNumber { get; set; } = null!;
+    public string Address { get; set; } = null!;
+    
+    public int AuthorId { get; set; }
+    public Author Author { get; set; } = null!;
 }

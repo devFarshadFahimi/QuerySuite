@@ -1,18 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using QuerySuite.Contracts.Models;
 using QuerySuite.Core;
+using QuerySuite.Core.Contracts.SpecificationPattern;
 
 namespace QuerySuite.Contracts.Extensions;
 
 public static class QuerySuiteExtensions
 {
-    public async static Task<QuerySuiteResult<TModel>> ToPaginatedDataAsync<TEntity, TModel>(
+    public static async Task<QuerySuiteResult<TModel>> ToPaginatedDataAsync<TEntity, TModel>(
         this IQueryable<TEntity> query,
         QuerySuiteParams querySuiteParams)
-        where TModel : new()
+        where TModel : new() where TEntity : class
     {
         // Apply filtering
-        if (querySuiteParams.Filters.Any())
+        if (querySuiteParams.Filters.Count != 0)
         {
             query = query.ApplyFilters<TEntity, TModel>(querySuiteParams.Filters);
         }
@@ -27,13 +28,15 @@ public static class QuerySuiteExtensions
         var totalRecords = await query.CountAsync();
 
         // Apply pagination
+        query = query
+            .Skip(querySuiteParams.TakeSize)
+            .Take(querySuiteParams.PageSize);
+
         var data = await query
-            .Skip((querySuiteParams.PageNumber - 1) * querySuiteParams.PageSize)
-            .Take(querySuiteParams.PageSize)
             .ProjectToType<TEntity, TModel>()
             .ToListAsync();
-
         // Return paginated result
-        return QuerySuiteResult<TModel>.Create(totalRecords, querySuiteParams.PageNumber, querySuiteParams.PageSize, data);
+        return QuerySuiteResult<TModel>.Create(totalRecords, querySuiteParams.PageNumber, querySuiteParams.PageSize,
+            data);
     }
 }

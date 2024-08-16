@@ -1,107 +1,72 @@
 using System.Linq.Expressions;
 
-namespace QuerySuite.Core.Contracts.SpecificationPattern
+namespace QuerySuite.Core.Contracts.SpecificationPattern;
+
+public abstract class Specification<TEntity> : ISpecification<TEntity>
 {
-    /// <summary>
-    /// Abstraction on <c>ISpecification</c> that supplies And, Or and Not.
-    /// </summary>
-    /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public abstract class Specification<TEntity> : ISpecification<TEntity>
+    public abstract Expression<Func<TEntity, bool>> IsSatisfiedBy();
+
+    public Func<TEntity, bool> IsSatisfiedByFunc()
     {
-        ///// <summary>
-        ///// Determines whether the specified candidate is satisfied by TEntity.
-        ///// </summary>
-        ///// <param name="candidate">The candidate.</param>
-        ///// <returns>
-        ///// 	<c>true</c> if [is satisfied by] [the specified candidate]; otherwise, <c>false</c>.
-        ///// </returns>
-        //public abstract bool IsSatisfiedBy(TEntity candidate);
+        return IsSatisfiedBy().Compile();
+    }
 
-        /// <summary>
-        /// generate compiled func of specification expression
-        /// </summary>
-        /// <returns>an expression that contains where clause we want</returns>
-        public abstract Expression<Func<TEntity, bool>> IsSatisfiedBy();
+    public ISpecification<TEntity> And(ISpecification<TEntity> specification)
+    {
+        return new AndSpecification<TEntity>(this, specification);
+    }
 
-        /// <summary>
-        /// generate specification Func
-        /// </summary>
-        /// <returns>a compiled func that contains where clause we want</returns>
-        public Func<TEntity, bool> IsSatisfiedByFunc()
-        {
-            return IsSatisfiedBy().Compile();
-        }
+    public ISpecification<TEntity> Or(ISpecification<TEntity> specification)
+    {
+        return new OrSpecification<TEntity>(this, specification);
+    }
 
-        /// <summary>
-        /// Ands the specified specification.
-        /// </summary>
-        /// <param name="specification">The specification.</param>
-        /// <returns></returns>
-        public ISpecification<TEntity> And(ISpecification<TEntity> specification)
-        {
-            return new AndSpecification<TEntity>(this, specification);
-        }
+    public ISpecification<TEntity> Not()
+    {
+        return new NotSpecification<TEntity>(this);
+    }
 
-        /// <summary>
-        /// Ors the specified specification.
-        /// </summary>
-        /// <param name="specification">The specification.</param>
-        /// <returns></returns>
-        public ISpecification<TEntity> Or(ISpecification<TEntity> specification)
-        {
-            return new OrSpecification<TEntity>(this, specification);
-        }
+    public List<Expression<Func<TEntity, object>>> Includes { get; } = [];
+    public List<string> IncludeStrings { get; } = [];
+    public List<Expression<Func<TEntity, object>>> OrderBy {get;} = [];
+    public List<Expression<Func<TEntity, object>>> OrderByDescending {get;} = [];
+    
+    // public Func<IQueryable<TEntity>, IQueryable<TEntity>>? RawQueries { get; set; }
 
-        /// <summary>
-        /// Nots this instance.
-        /// </summary>
-        /// <returns></returns>
-        public ISpecification<TEntity> Not()
-        {
-            return new NotSpecification<TEntity>(this);
-        }
+    // protected void AddRawQuery(Func<IQueryable<TEntity>, IQueryable<TEntity>> includes)
+    // {
+    //     RawQueries = includes;
+    // }
+     
+    protected void AddOrderByDesc(Expression<Func<TEntity, object>> orderByDescExpression)
+    {
+        OrderByDescending.Add(orderByDescExpression);
+    }
+    
+     
+    protected void AddOrderBy(Expression<Func<TEntity, object>> orderByExpression)
+    {
+        OrderBy.Add(orderByExpression);
+    }
+    
+    protected void AddInclude(Expression<Func<TEntity, object>> includeExpression)
+    {
+        Includes.Add(includeExpression);
+    }
 
-        public List<Expression<Func<TEntity, object>>> Includes { get; } = new List<Expression<Func<TEntity, object>>>();
-        public List<string> IncludeStrings { get; } = new List<string>();
+    // string-based includes allow for including children of children, e.g. Basket.Items.Product
+    protected void AddInclude(params string[] relations)
+    {
+        IncludeStrings.Add(ConcatStringsWithDot(relations));
+    }
 
-        protected virtual void AddInclude(Expression<Func<TEntity, object>> includeExpression)
-        {
-            Includes.Add(includeExpression);
-        }
-
-        // string-based includes allow for including children of children, e.g. Basket.Items.Product
-        protected virtual void AddInclude(string includeString)
-        {
-            IncludeStrings.Add(includeString);
-        }
-
-        protected void SetIncludes(ISpecification<TEntity> leftExpression, ISpecification<TEntity> rightExpression)
-        {
-            foreach (var item in leftExpression.Includes)
-            {
-                if (!Includes.Any(p => p.Body.ToString() == item.Body.ToString()))
-                {
-                    AddInclude(item);
-                };
-            }
-
-            foreach (var item in rightExpression.Includes)
-            {
-                if (!Includes.Any(p => p.Body.ToString() == item.Body.ToString()))
-                {
-                    AddInclude(item);
-                };
-            }
-        }
-        protected void SetIncludes(ISpecification<TEntity> specification)
-        {
-            foreach (var item in specification.Includes)
-            {
-                if (!Includes.Any(p => p.Body.ToString() == item.Body.ToString()))
-                {
-                    AddInclude(item);
-                };
-            }
-        }
+    protected void AddInclude(string includeString)
+    {
+        IncludeStrings.Add(includeString);
+    }
+        
+    private static string ConcatStringsWithDot(params string[] types)
+    {
+        return string.Join(".", types);
     }
 }
