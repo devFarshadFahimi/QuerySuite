@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>QuerySuite.Core</PackageId>
+    <Version>1.0.2</Version>
     <Authors>Farshad Fahimi</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Product>QuerySuite</Product>

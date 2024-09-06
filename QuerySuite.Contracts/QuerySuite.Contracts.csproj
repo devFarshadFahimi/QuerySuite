@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>QuerySuite.Contracts</PackageId>
     <Authors>Farshad Fahimi</Authors>
+    <Version>1.0.2</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Product>QuerySuite</Product>
     <Description>A library for pagination, filtering, and sorting in IQueryable for .NET applications.</Description>
